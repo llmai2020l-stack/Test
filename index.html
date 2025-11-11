@@ -82,8 +82,7 @@
         .suggestion-card p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; }
 
         /* --- History Screen --- */
-        .history-group { margin-bottom: 32px; padding: 0 16px; }
-        .history-group-title { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+        #history-list-container { padding: 0 16px; }
         .history-item { display: block; background-color: var(--bg-secondary); border-radius: 8px; padding: 16px; border: 1px solid var(--border-color); margin-bottom: 12px; transition: background-color 0.2s, border-color 0.2s; }
         body:not(.touch-device) .history-item:hover { background-color: var(--bg-tertiary); border-color: #4f5257; }
         .history-item p { font-size: 1rem; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -92,23 +91,34 @@
         #chat-screen.active { display: flex; flex-direction: column; position: relative; }
         .chat-container { flex-grow: 1; overflow-y: auto; padding: 16px 8px; scroll-behavior: smooth; }
         .chat-content-wrapper { display: flex; flex-direction: column; gap: 32px; max-width: 820px; width: 100%; margin: 0 auto; padding: 16px; }
-        .chat-message { position: relative; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
-        .message-header { display: flex; justify-content: space-between; align-items: center; }
+        .chat-message { position: relative; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; }
+        .message-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 0; }
         .message-role { font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
         .user-message { border-left: 3px solid var(--user-accent-color, #82aaff); }
         .user-message .message-role { color: var(--user-accent-color, #82aaff); }
         .ai-message { border-left: 3px solid var(--model-accent-color, #c792ea); }
         .ai-message .message-role { color: var(--model-accent-color, #c792ea); }
-        .message-body { line-height: 1.7; font-size: 1rem; color: var(--text-primary); word-wrap: break-word; }
+        .message-body { padding: 16px 20px; line-height: 1.7; font-size: 1rem; color: var(--text-primary); word-wrap: break-word; }
         .message-body p:not(:last-child) { margin-bottom: 1em; }
+
+        /* --- Code Box --- */
+        .code-box { background-color: var(--bg-code); border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; margin: 1em 0; }
+        .code-box-header { display: flex; align-items: center; justify-content: flex-end; gap: 8px; background-color: var(--bg-tertiary); padding: 8px 12px; border-bottom: 1px solid var(--border-color); }
+        .code-box-header .lang-name { margin-right: auto; font-family: var(--font-family-code); font-size: 0.85em; color: var(--text-secondary); text-transform: uppercase; }
+        .code-box-btn { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background-color: transparent; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.8em; color: var(--text-secondary); transition: background-color 0.2s, color 0.2s; }
+        .code-box-btn:hover { background-color: var(--bg-hover); color: var(--text-primary); }
+        .code-box-btn .material-symbols-outlined { font-size: 16px; }
+        .code-box pre { margin: 0; }
+        .code-box code { display: block; padding: 16px; font-family: var(--font-family-code); color: var(--text-primary); white-space: pre-wrap; word-wrap: break-word; overflow-x: auto; background-color: transparent; }
+
         .chat-footer { flex-shrink: 0; padding: 16px 24px; border-top: 1px solid var(--border-color); background: var(--bg-primary); }
         .prompt-input-wrapper { position: relative; width: 100%; max-width: 820px; margin: 0 auto; display: flex; align-items: flex-end; gap: 12px; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 12px; transition: border-color 0.2s; }
         .prompt-input-wrapper:focus-within { border-color: var(--text-active); }
         .prompt-input { width: 100%; background: transparent; border: none; color: var(--text-primary); outline: none; font-size: 1rem; line-height: 1.6; resize: none; max-height: 200px; }
-        .send-button { background-color: var(--bg-tertiary); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; align-self: flex-end; transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s; transform: scale(0.9); opacity: 0.6; }
+        .send-button { background-color: var(--bg-tertiary); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; align-self: flex-end; transition: all 0.2s ease; transform: scale(0.9); opacity: 0.6; }
         .send-button.active { background-color: var(--text-active); transform: scale(1); opacity: 1; }
-        .send-button:disabled { background-color: var(--bg-tertiary); cursor: not-allowed; opacity: 0.5; }
         .send-button.active .material-symbols-outlined { color: var(--bg-primary); }
+        .send-button:disabled { background-color: var(--bg-tertiary); cursor: not-allowed; opacity: 0.5; }
         
         .typing-indicator { display: flex; align-items: center; gap: 8px; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px 20px; color: var(--text-secondary); font-style: italic; font-size: 0.9rem; }
         .typing-indicator .dot { width: 8px; height: 8px; background-color: var(--text-secondary); border-radius: 50%; animation: typing-bounce 1.2s infinite ease-in-out; }
@@ -211,7 +221,13 @@
                         </header>
                         <div class="suggestion-grid">
                             <a href="#" class="suggestion-card" data-prompt="Draft an email to a client about a project update, keeping the tone professional and concise."><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><h3>Draft an email</h3><p>To a client about a project update, keeping the tone professional and concise.</p></a>
-                            <a href="#" class="suggestion-card" data-prompt="Analyze a Python script that's throwing an unexpected 'KeyError' and suggest a fix."><span class="material-symbols-outlined" aria-hidden="true">code</span><h3>Debug my code</h3><p>Analyze a Python script that's throwing an unexpected 'KeyError'.</p></a>
+                            <a href="#" class="suggestion-card" data-prompt="Explain the following code snippet: ```python
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)
+```"><span class="material-symbols-outlined" aria-hidden="true">code</span><h3>Explain my code</h3><p>Analyze and explain a Python script that finds the factorial of a number.</p></a>
                             <a href="#" class="suggestion-card" data-prompt="Create a 5-day itinerary for a cultural trip to Kyoto, Japan, for two people."><span class="material-symbols-outlined" aria-hidden="true">flight</span><h3>Plan a trip</h3><p>Create a 5-day itinerary for a cultural trip to Kyoto, Japan, for two people.</p></a>
                             <a href="#" class="suggestion-card" data-prompt="Brainstorm ideas for a new mobile app that helps users learn a new skill in 15 minutes a day."><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span><h3>Brainstorm ideas</h3><p>For a new mobile app that helps users learn a new skill in 15 minutes a day.</p></a>
                         </div>
@@ -242,7 +258,7 @@
                         <header class="page-header">
                             <h2>Conversation History</h2>
                         </header>
-                        <div id="history-list-container" style="padding: 0 16px;">
+                        <div id="history-list-container">
                             <!-- History items will be dynamically added here -->
                         </div>
                     </div>
@@ -255,6 +271,7 @@
                             <h2>Profile Settings</h2>
                         </header>
                         <form id="profile-form">
+                             <div class="auth-error-message" id="profile-error"></div>
                             <section class="profile-card" aria-labelledby="user-info-heading">
                                 <h3 id="user-info-heading" class="visually-hidden">User Information</h3>
                                 <div class="form-group">
@@ -368,26 +385,37 @@
         // --- Gemini API SDK ---
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // --- Firebase Configuration ---
+        // =================================================================================
+        // --- CRITICAL: CONFIGURATION ---
+        // =================================================================================
+        // THIS APP WILL NOT WORK UNTIL YOU REPLACE THESE PLACEHOLDERS WITH YOUR OWN KEYS.
+        // 1. Get your Firebase config from your project's settings.
+        // 2. Get your Gemini API key from Google AI Studio.
+        // =================================================================================
+
         const firebaseConfig = {
-          apiKey: "AIzaSyBB0tHdHbulYhvNu3n4vGyjFOnB0-1bMj0", // Replace with your actual Firebase config
-          authDomain: "instaaick.firebaseapp.com",
-          databaseURL: "https://instaaick-default-rtdb.asia-southeast1.firebasedatabase.app",
-          projectId: "instaaick",
-          storageBucket: "instaaick.firebasestorage.app",
-          messagingSenderId: "698269101765",
-          appId: "1:698269101765:web:702042103de0a0ce670aac"
-        };
+  apiKey: "AIzaSyBB0tHdHbulYhvNu3n4vGyjFOnB0-1bMj0",
+  authDomain: "instaaick.firebaseapp.com",
+  databaseURL: "https://instaaick-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "instaaick",
+  storageBucket: "instaaick.firebasestorage.app",
+  messagingSenderId: "698269101765",
+  appId: "1:698269101765:web:702042103de0a0ce670aac"
+};
         
-        // --- Gemini API Key ---
-        const GEMINI_API_KEY = "AIzaSyCgcGrSbAcfNhgsZB-MfI_B6cm_KIn41R8"; // Replace with your actual Gemini API key
+        const GEMINI_API_KEY = "AIzaSyCgcGrSbAcfNhgsZB-MfI_B6cm_KIn41R8"; // <-- REPLACE
 
         // --- Initialize Firebase and Gemini ---
-        firebase.initializeApp(firebaseConfig);
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) {
+            console.error("Firebase initialization error. Make sure your firebaseConfig is correct.", e);
+            alert("Could not initialize Firebase. Please check the console for details.");
+        }
+        
         const auth = firebase.auth();
         const db = firebase.firestore(); 
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
         
         let chat;
@@ -416,25 +444,15 @@
             const allModals = document.querySelectorAll('.modal-overlay');
             const suggestionCards = document.querySelectorAll('.suggestion-card');
             const historyListContainer = document.getElementById('history-list-container');
-
-            // --- Sidebar Auth Elements ---
             const sidebarFooterAuth = document.getElementById('sidebar-footer-auth');
             const sidebarFooterGuest = document.getElementById('sidebar-footer-guest');
             const loginSignupBtn = document.getElementById('login-signup-btn');
             const logoutBtn = document.getElementById('logout-btn');
-            
-            // --- Modal Elements ---
             const authModal = document.getElementById('auth-modal');
             const authModalTitle = document.getElementById('auth-modal-title');
             const authViewSwitches = document.querySelectorAll('.auth-view-switch');
-            const loginForm = document.getElementById('login-form');
-            const signupForm = document.getElementById('signup-form');
-            const forgotPasswordForm = document.getElementById('forgot-password-form');
             const authViews = document.querySelectorAll('.auth-view');
-            const googleLoginBtns = document.querySelectorAll('.btn-google');
             const authErrorMessages = document.querySelectorAll('.auth-error-message');
-
-            // --- Profile Form fields ---
             const profileFullName = document.getElementById('full-name');
             const profileEmail = document.getElementById('email');
 
@@ -446,7 +464,7 @@
             menuToggle.addEventListener('click', (e) => { e.stopPropagation(); body.classList.toggle('left-sidebar-open'); });
             overlay.addEventListener('click', closeSidebar);
 
-            const showScreen = async (screenId) => {
+            const showScreen = (screenId) => {
                 const screenToShow = document.getElementById(screenId);
                 if (!screenToShow) return;
                 
@@ -458,12 +476,10 @@
                 const activeLink = document.querySelector(`.nav-link[data-screen="${screenId}"]`);
                 if(activeLink) {
                     activeLink.classList.add('active');
-                    const titleText = activeLink.querySelector('span:not(.material-symbols-outlined)').textContent.trim();
-                    headerTitle.textContent = titleText;
-                    contentArea.setAttribute('aria-label', `Main content: ${titleText} screen`);
+                    headerTitle.textContent = activeLink.querySelector('span:not(.material-symbols-outlined)').textContent.trim();
                 }
 
-                if (screenId === 'history-screen') await loadHistoryList();
+                if (screenId === 'history-screen') loadHistoryList();
                 if (screenId === 'chat-screen') messageInput.focus();
                 if (window.innerWidth < 1024) closeSidebar();
             };
@@ -472,27 +488,32 @@
                 link.addEventListener('click', (e) => { 
                     e.preventDefault(); 
                     const screenId = link.getAttribute('data-screen');
-                    if (screenId === 'chat-screen') startNewChat();
-                    if (screenId) showScreen(screenId);
+                    if (screenId === 'chat-screen' && !document.getElementById('chat-screen').classList.contains('active')) startNewChat();
+                    else if (screenId) showScreen(screenId);
                 });
             });
 
             // --- Chat Scroll & New Message Indicator ---
             chatContainer.addEventListener('scroll', () => {
                 const threshold = 100;
-                const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < threshold;
-                isUserScrolledUp = !isAtBottom;
-                if (isAtBottom) scrollToBottomBtn.classList.remove('visible');
+                isUserScrolledUp = (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight) > threshold;
+                if (!isUserScrolledUp) scrollToBottomBtn.classList.remove('visible');
             });
+            const scrollToBottom = () => {
+                 if (!isUserScrolledUp) {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    scrollToBottomBtn.classList.add('visible');
+                }
+            };
             scrollToBottomBtn.addEventListener('click', () => { chatContainer.scrollTop = chatContainer.scrollHeight; });
 
             // --- Chat & Message Processing ---
             function showTypingIndicator() {
+                if (document.getElementById('typing-indicator')) return;
                 const indicatorHtml = `<div class="typing-indicator" id="typing-indicator">Typing <div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
-                if (!document.getElementById('typing-indicator')) {
-                    chatContentWrapper.insertAdjacentHTML('beforeend', indicatorHtml);
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                }
+                chatContentWrapper.insertAdjacentHTML('beforeend', indicatorHtml);
+                scrollToBottom();
             }
 
             function removeTypingIndicator() {
@@ -501,46 +522,56 @@
             }
             
             function escapeHtml(unsafe) {
+                if (typeof unsafe !== 'string') return '';
                 return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            }
+
+            function processMessageText(text) {
+                const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+                let lastIndex = 0;
+                let resultHtml = '';
+                let match;
+
+                while ((match = codeBlockRegex.exec(text)) !== null) {
+                    if (match.index > lastIndex) {
+                        const plainText = text.substring(lastIndex, match.index).trim();
+                        if (plainText) resultHtml += `<p>${escapeHtml(plainText).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`;
+                    }
+
+                    const lang = escapeHtml(match[1] || 'plaintext');
+                    const codeContent = match[2].trim();
+                    const previewButton = lang.toLowerCase() === 'html' ? `<button class="code-box-btn preview-code-btn" title="Preview HTML"><span class="material-symbols-outlined">visibility</span>Preview</button>` : '';
+
+                    resultHtml += `<div class="code-box"><div class="code-box-header"><span class="lang-name">${lang}</span>${previewButton}<button class="code-box-btn download-code-btn" title="Download Code"><span class="material-symbols-outlined">download</span>Download</button><button class="code-box-btn copy-code-btn" title="Copy Code"><span class="material-symbols-outlined">content_copy</span>Copy</button></div><pre><code>${escapeHtml(codeContent)}</code></pre></div>`;
+                    lastIndex = codeBlockRegex.lastIndex;
+                }
+
+                if (lastIndex < text.length) {
+                    const remainingText = text.substring(lastIndex).trim();
+                    if (remainingText) resultHtml += `<p>${escapeHtml(remainingText).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`;
+                }
+                return resultHtml || `<p>${escapeHtml(text).replace(/\n/g, '<br>')}</p>`;
             }
 
             function addMessageToChat(role, text) {
                 removeTypingIndicator();
-                // Basic markdown for bolding (**text**)
-                let sanitizedText = escapeHtml(text).replace(/\n/g, '<br>');
-                sanitizedText = sanitizedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                const messageClass = role === 'user' ? 'user-message' : 'ai-message';
-                const roleText = role === 'user' ? 'User' : 'Model';
-                const messageHtml = `<div class="chat-message ${messageClass}">
-                                        <div class="message-header"><div class="message-role">${roleText}</div></div>
-                                        <div class="message-body">${sanitizedText}</div>
-                                    </div>`;
-
+                const messageBodyHtml = processMessageText(text);
+                const roleText = role === 'user' ? 'You' : 'Gemini';
+                const messageHtml = `<div class="chat-message ${role}-message"><div class="message-header"><div class="message-role">${roleText}</div></div><div class="message-body">${messageBodyHtml}</div></div>`;
                 chatContentWrapper.insertAdjacentHTML('beforeend', messageHtml);
-                if (!isUserScrolledUp) {
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                } else {
-                    scrollToBottomBtn.classList.add('visible');
-                }
+                scrollToBottom();
             }
             
-            function clearChat() { chatContentWrapper.innerHTML = ''; }
-
             function startNewChat() {
-                clearChat();
+                chatContentWrapper.innerHTML = '';
                 currentChatId = null;
                 chat = model.startChat({ history: [] });
-                const welcomeMessage = auth.currentUser 
-                    ? "Hello! Your conversations are saved automatically. Ask me anything!"
-                    : "Hello! Conversations are saved to your browser. Please log in to sync across devices.";
-                addMessageToChat('model', welcomeMessage);
+                addMessageToChat('model', auth.currentUser ? `Hello, ${auth.currentUser.displayName || 'user'}! How can I help?` : "Hello! Ask me anything. Log in to save your chats across devices.");
                 showScreen('chat-screen');
             }
             
             // --- Modal Logic ---
             const openModal = (modalElement) => {
-                if (!modalElement) return;
                 lastActiveElement = document.activeElement;
                 modalElement.classList.add('visible');
                 const closeButton = modalElement.querySelector('.modal-close-btn');
@@ -548,44 +579,36 @@
             };
 
             const closeModal = (modalElement) => {
-                if (!modalElement) return;
                 modalElement.classList.remove('visible');
                 if (lastActiveElement) lastActiveElement.focus();
                 authErrorMessages.forEach(msg => msg.classList.remove('visible'));
             };
 
             allModals.forEach(modal => {
-                const closeBtn = modal.querySelector('.modal-close-btn');
-                if(closeBtn) closeBtn.addEventListener('click', () => closeModal(modal));
+                modal.querySelector('.modal-close-btn')?.addEventListener('click', () => closeModal(modal));
                 modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(modal); });
             });
             
             // --- Authentication & UI Updates ---
             auth.onAuthStateChanged(user => {
-                const profileLink = document.querySelector('.nav-link[data-screen="profile-screen"]');
-                clearChat();
                 if (user) {
                     sidebarFooterAuth.style.display = 'block';
                     sidebarFooterGuest.style.display = 'none';
-                    profileLink.style.pointerEvents = 'auto';
-                    profileLink.style.opacity = '1';
-                    
                     profileFullName.value = user.displayName || '';
                     profileEmail.value = user.email || '';
                 } else {
                     sidebarFooterAuth.style.display = 'none';
                     sidebarFooterGuest.style.display = 'block';
                     if (document.querySelector('#profile-screen.active')) showScreen('home-screen');
-                    profileLink.style.pointerEvents = 'none';
-                    profileLink.style.opacity = '0.5';
                 }
-                startNewChat();
             });
 
             loginSignupBtn.addEventListener('click', () => openModal(authModal));
-            logoutBtn.addEventListener('click', () => auth.signOut().catch(error => showAuthError(error.message)));
+            logoutBtn.addEventListener('click', () => {
+                auth.signOut().catch(error => showAuthError(error.message, 'profile-error'));
+                // App will effectively restart via onAuthStateChanged
+            });
             
-            // --- Auth Form & Error Logic ---
             function showAuthError(message, viewId) {
                 const errorElement = document.getElementById(viewId);
                 if (errorElement) {
@@ -595,194 +618,164 @@
             }
             
             const switchAuthView = (targetViewId) => {
-                authErrorMessages.forEach(msg => msg.classList.remove('visible'));
-                authViews.forEach(view => view.classList.remove('active'));
-                const targetView = document.getElementById(targetViewId);
-                if (targetView) {
-                    targetView.classList.add('active');
-                    authModalTitle.textContent = targetViewId === 'login-view' ? 'Login' : targetViewId === 'signup-view' ? 'Create Account' : 'Reset Password';
-                }
+                authViews.forEach(view => view.classList.toggle('active', view.id === targetViewId));
+                authModalTitle.textContent = {
+                    'login-view': 'Login',
+                    'signup-view': 'Create Account',
+                    'forgot-password-view': 'Reset Password'
+                }[targetViewId];
             };
 
             authViewSwitches.forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); switchAuthView(link.dataset.targetView); }));
 
-            const handleFormSubmit = async (form, authFunction, errorViewId) => {
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = 'Processing...';
+            async function handleFormSubmit(form, authFunction, errorViewId) {
+                const btn = form.querySelector('button[type="submit"]');
+                const originalText = btn.textContent;
+                btn.disabled = true; btn.textContent = 'Processing...';
                 document.getElementById(errorViewId).classList.remove('visible');
                 try {
                     await authFunction();
                     closeModal(authModal);
-                } catch (error) {
-                    showAuthError(error.message, errorViewId);
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = form.id === 'login-form' ? 'Login' : 'Create Account';
-                }
-            };
+                } catch (error) { showAuthError(error.message, errorViewId); }
+                finally { btn.disabled = false; btn.textContent = originalText; }
+            }
             
-            loginForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(loginForm, () => auth.signInWithEmailAndPassword(loginForm['login-email'].value, loginForm['login-password'].value), 'login-error'); });
-            signupForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(signupForm, async () => { const cred = await auth.createUserWithEmailAndPassword(signupForm['signup-email'].value, signupForm['signup-password'].value); await cred.user.updateProfile({ displayName: signupForm['signup-name'].value }); }, 'signup-error'); });
-            forgotPasswordForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(forgotPasswordForm, async () => { await auth.sendPasswordResetEmail(forgotPasswordForm['forgot-email'].value); alert('Password reset link sent.'); switchAuthView('login-view'); }, 'forgot-error'); });
+            document.getElementById('login-form').addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(e.target, () => auth.signInWithEmailAndPassword(e.target['login-email'].value, e.target['login-password'].value), 'login-error'); });
+            document.getElementById('signup-form').addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(e.target, async () => { const cred = await auth.createUserWithEmailAndPassword(e.target['signup-email'].value, e.target['signup-password'].value); await cred.user.updateProfile({ displayName: e.target['signup-name'].value }); }, 'signup-error'); });
+            document.getElementById('forgot-password-form').addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(e.target, async () => { await auth.sendPasswordResetEmail(e.target['forgot-email'].value); alert('Password reset link sent!'); switchAuthView('login-view'); }, 'forgot-error'); });
             
-            const handleGoogleSignIn = async (event) => { /* ... (no changes to this function) ... */ };
-            googleLoginBtns.forEach(btn => btn.addEventListener('click', handleGoogleSignIn));
-            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const visibleModal = document.querySelector('.modal-overlay.visible'); if (visibleModal) closeModal(visibleModal); }});
+            document.querySelectorAll('.btn-google').forEach(btn => btn.addEventListener('click', async () => {
+                try {
+                    await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                    closeModal(authModal);
+                } catch (error) { showAuthError(error.message, 'login-error'); }
+            }));
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(document.querySelector('.modal-overlay.visible')); });
 
             // --- Chat & Form Logic ---
-            const updateSendButtonState = () => sendButton.classList.toggle('active', messageInput.value.trim().length > 0);
-            const autoResizeTextarea = () => { messageInput.style.height = 'auto'; messageInput.style.height = `${messageInput.scrollHeight}px`; updateSendButtonState(); };
-            messageInput.addEventListener('input', autoResizeTextarea);
-            updateSendButtonState();
+            messageInput.addEventListener('input', () => {
+                sendButton.classList.toggle('active', messageInput.value.trim().length > 0);
+                messageInput.style.height = 'auto';
+                messageInput.style.height = `${messageInput.scrollHeight}px`;
+            });
 
-            // --- LOCAL + FIREBASE HISTORY IMPLEMENTATION ---
+            // --- LOCAL + FIREBASE HISTORY ---
+            const getLocalHistory = () => JSON.parse(localStorage.getItem('gemini-chat-history') || '{}');
 
-            // Helper to get all chats from local storage
-            function getChatsFromLocalStorage() {
-                try {
-                    const chats = localStorage.getItem('gemini-chat-history');
-                    return chats ? JSON.parse(chats) : {};
-                } catch (e) {
-                    console.error("Error reading chats from local storage:", e);
-                    return {};
-                }
-            }
-
-            // Save chat history to both Local Storage and Firebase
             async function saveChatHistory() {
                 if (!chat) return;
                 const historyToSave = await chat.getHistory();
                 if (historyToSave.length === 0) return;
 
-                const user = auth.currentUser;
-                const title = historyToSave[0]?.parts[0]?.text.substring(0, 50) || "Untitled Chat";
+                const firstUserMsg = historyToSave.find(h => h.role === 'user');
+                const title = firstUserMsg ? firstUserMsg.parts[0].text.substring(0, 40) + '...' : "Untitled Chat";
                 
                 if (!currentChatId) {
-                    currentChatId = user ? db.collection('chats').doc().id : `local_${Date.now()}`;
+                    currentChatId = auth.currentUser ? db.collection('chats').doc().id : `local_${Date.now()}`;
                 }
 
-                const chatData = {
-                    history: historyToSave,
-                    title: title,
-                    updatedAt: new Date().toISOString()
-                };
+                const chatData = { title, history: historyToSave, updatedAt: new Date().toISOString() };
+                const localChats = getLocalHistory();
+                localChats[currentChatId] = chatData;
+                localStorage.setItem('gemini-chat-history', JSON.stringify(localChats));
 
-                // 1. Save to Local Storage
-                try {
-                    const localChats = getChatsFromLocalStorage();
-                    localChats[currentChatId] = chatData;
-                    localStorage.setItem('gemini-chat-history', JSON.stringify(localChats));
-                } catch (e) { console.error("Error saving to local storage:", e); }
-
-                // 2. Save to Firebase (if logged in)
-                if (user) {
-                    const firebaseChatData = { ...chatData, userId: user.uid, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-                    await db.collection('chats').doc(currentChatId).set(firebaseChatData, { merge: true });
+                if (auth.currentUser) {
+                    try {
+                        await db.collection('chats').doc(currentChatId).set({ ...chatData, userId: auth.currentUser.uid, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    } catch (error) { console.error("Firebase save error:", error); }
                 }
             }
 
-            // Render the list of chats to the History screen
-            function renderHistoryList(chatsObject) {
-                const chatEntries = Object.entries(chatsObject);
-                if (chatEntries.length === 0) {
-                    historyListContainer.innerHTML = '<p>No saved conversations found.</p>';
-                    return;
+            function renderHistoryList(chats) {
+                const entries = Object.entries(chats);
+                if (entries.length === 0) {
+                    historyListContainer.innerHTML = '<p style="color: var(--text-secondary);">No conversations found.</p>'; return;
                 }
-                chatEntries.sort(([, a], [, b]) => new Date(b.updatedAt) - new Date(a.updatedAt));
-
-                historyListContainer.innerHTML = '';
-                for (const [id, chatData] of chatEntries) {
-                    const item = document.createElement('a');
-                    item.href = '#';
-                    item.className = 'history-item';
-                    item.dataset.chatId = id;
-                    item.innerHTML = `<p>${escapeHtml(chatData.title)}</p>`;
-                    item.addEventListener('click', (e) => { e.preventDefault(); loadChat(id); });
-                    historyListContainer.appendChild(item);
-                }
+                entries.sort(([, a], [, b]) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                historyListContainer.innerHTML = entries.map(([id, data]) => `<a href="#" class="history-item" data-chat-id="${id}"><p>${escapeHtml(data.title)}</p></a>`).join('');
             }
             
-            // Load history: local first, then merge with Firebase
             async function loadHistoryList() {
-                historyListContainer.innerHTML = '<p>Loading history...</p>';
-                
-                let combinedChats = getChatsFromLocalStorage();
-                renderHistoryList(combinedChats); // Render local chats immediately
-
-                const user = auth.currentUser;
-                if (user) {
-                    const querySnapshot = await db.collection('chats').where('userId', '==', user.uid).orderBy('updatedAt', 'desc').get();
-                    
-                    querySnapshot.forEach(doc => {
-                        const fbChat = doc.data();
-                        combinedChats[doc.id] = { ...fbChat, updatedAt: fbChat.updatedAt?.toDate().toISOString() };
-                    });
-
-                    localStorage.setItem('gemini-chat-history', JSON.stringify(combinedChats));
-                    renderHistoryList(combinedChats); // Re-render with merged data
+                historyListContainer.innerHTML = '<p style="color: var(--text-secondary);">Loading...</p>';
+                let combined = getLocalHistory();
+                if (auth.currentUser) {
+                    try {
+                        const snap = await db.collection('chats').where('userId', '==', auth.currentUser.uid).orderBy('updatedAt', 'desc').get();
+                        snap.forEach(doc => { combined[doc.id] = { ...doc.data(), updatedAt: doc.data().updatedAt?.toDate().toISOString() }; });
+                        localStorage.setItem('gemini-chat-history', JSON.stringify(combined));
+                    } catch (e) { console.error("Firebase fetch error:", e); }
                 }
+                renderHistoryList(combined);
             }
 
-            // Load a specific chat from local storage or Firebase
             async function loadChat(chatId) {
-                let chatData;
-                const localChats = getChatsFromLocalStorage();
-                if (localChats[chatId]) {
-                    chatData = localChats[chatId];
-                } else {
-                    alert('Error: Chat not found locally. Trying cloud...');
-                    const doc = await db.collection('chats').doc(chatId).get();
-                    if(doc.exists) chatData = doc.data();
-                }
-
+                const chatData = getLocalHistory()[chatId];
                 if (!chatData) { alert('Error loading chat.'); return; }
                 
-                clearChat();
+                chatContentWrapper.innerHTML = '';
                 currentChatId = chatId;
                 const formattedHistory = chatData.history.map(item => ({ role: item.role, parts: item.parts.map(p => ({ text: p.text })) }));
                 chat = model.startChat({ history: formattedHistory });
                 
-                addMessageToChat('model', `*Loaded conversation: "${chatData.title}"*`);
+                addMessageToChat('model', `**Conversation loaded: "${chatData.title}"**`);
                 formattedHistory.forEach(msg => addMessageToChat(msg.role, msg.parts[0].text));
                 
                 showScreen('chat-screen');
             }
 
-            const handlePrompt = async (promptText) => {
-                if (!auth.currentUser && !confirm("You are not logged in. This chat will only be saved to this browser. Continue?")) {
-                    openModal(authModal);
-                    return;
-                }
-                
+            async function handlePrompt(promptText) {
                 addMessageToChat('user', promptText);
                 messageInput.value = '';
-                autoResizeTextarea();
-                showTypingIndicator();
+                messageInput.style.height = 'auto';
+                sendButton.classList.remove('active');
                 sendButton.disabled = true;
+                showTypingIndicator();
 
                 try {
                     const result = await chat.sendMessage(promptText);
-                    const response = result.response;
-                    const text = response.text();
-                    
+                    const text = result.response.text();
                     addMessageToChat('model', text);
                     await saveChatHistory();
-
                 } catch (error) {
                     console.error("Gemini API Error:", error);
-                    addMessageToChat('model', 'Sorry, something went wrong. Please try again.');
+                    addMessageToChat('model', 'Sorry, an error occurred. Please check your Gemini API key and try again.');
                 } finally {
                     sendButton.disabled = false;
                     removeTypingIndicator();
                 }
-            };
+            }
+            
+            // --- Event Listeners ---
+            chatContentWrapper.addEventListener('click', (e) => {
+                const btn = e.target.closest('.code-box-btn');
+                if (!btn) return;
+                const code = btn.closest('.code-box').querySelector('code').textContent;
+                const originalHTML = btn.innerHTML;
+                const showFeedback = (msg) => { btn.innerHTML = `<span class="material-symbols-outlined">check</span> ${msg}`; setTimeout(() => btn.innerHTML = originalHTML, 2000); };
+                if (btn.classList.contains('copy-code-btn')) { navigator.clipboard.writeText(code).then(() => showFeedback('Copied!')); }
+                if (btn.classList.contains('preview-code-btn')) { window.open().document.write(code); }
+                if (btn.classList.contains('download-code-btn')) {
+                    const lang = btn.closest('.code-box').querySelector('.lang-name').textContent.toLowerCase();
+                    const ext = { 'javascript': 'js', 'python': 'py', 'html': 'html', 'css': 'css', 'json': 'json' }[lang] || 'txt';
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(new Blob([code], { type: 'text/plain' }));
+                    a.download = `code.${ext}`;
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+            });
+
+            historyListContainer.addEventListener('click', (e) => {
+                const item = e.target.closest('.history-item');
+                if (item) loadChat(item.dataset.chatId);
+            });
 
             chatForm.addEventListener('submit', (e) => { e.preventDefault(); if (messageInput.value.trim()) handlePrompt(messageInput.value.trim()); });
             suggestionCards.forEach(card => card.addEventListener('click', (e) => { e.preventDefault(); startNewChat(); setTimeout(() => handlePrompt(card.dataset.prompt), 50); }));
-            profileForm.addEventListener('submit', (e) => { e.preventDefault(); const user = auth.currentUser; if (user) user.updateProfile({ displayName: profileFullName.value }).then(() => alert('Profile updated!')).catch(err => alert(err.message)); });
+            profileForm.addEventListener('submit', (e) => { e.preventDefault(); const user = auth.currentUser; if (user) user.updateProfile({ displayName: profileFullName.value }).then(() => alert('Profile updated!')).catch(err => showAuthError(err.message, 'profile-error')); });
 
             // --- Initial Setup ---
+            startNewChat();
             showScreen('home-screen');
         });
     </script>
