@@ -151,8 +151,6 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .modal-header h2 { font-size: 1.25rem; font-weight: 600; }
         .modal-body p { color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
-        .modal-close-btn { display: none; } /* Hide close button on auth modal */
-
 
         /* --- Auth Modal --- */
         .auth-view { display: none; }
@@ -198,6 +196,9 @@
                 <div class="sidebar-footer">
                     <nav class="sidebar-nav" id="sidebar-footer-auth" style="display: none;">
                         <a href="#" class="nav-link" data-screen="profile-screen"><span class="material-symbols-outlined" aria-hidden="true">account_circle</span><span>Profile</span></a>
+                    </nav>
+                    <nav class="sidebar-nav" id="sidebar-footer-guest" style="display: none;">
+                        <button id="login-signup-btn"><span class="material-symbols-outlined" aria-hidden="true">login</span><span>Login / Sign Up</span></button>
                     </nav>
                 </div>
             </div>
@@ -393,20 +394,21 @@ def factorial(n):
         // =================================================================================
 
         const firebaseConfig = {
-  apiKey: "AIzaSyBB0tHdHbulYhvNu3n4vGyjFOnB0-1bMj0",
-  authDomain: "instaaick.firebaseapp.com",
-  databaseURL: "https://instaaick-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "instaaick",
-  storageBucket: "instaaick.firebasestorage.app",
-  messagingSenderId: "698269101765",
-  appId: "1:698269101765:web:702042103de0a0ce670aac"
-};
+            apiKey: "YOUR_API_KEY", // <-- REPLACE
+            authDomain: "YOUR_AUTH_DOMAIN", // <-- REPLACE
+            projectId: "YOUR_PROJECT_ID", // <-- REPLACE
+            storageBucket: "YOUR_STORAGE_BUCKET", // <-- REPLACE
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <-- REPLACE
+            appId: "YOUR_APP_ID" // <-- REPLACE
+        };
         
-        const GEMINI_API_KEY = "AIzaSyCgcGrSbAcfNhgsZB-MfI_B6cm_KIn41R8"; // <-- REPLACE
+        const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // <-- REPLACE
 
         // --- Initialize Firebase and Gemini ---
         try {
-            firebase.initializeApp(firebaseConfig);
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
         } catch (e) {
             console.error("Firebase initialization error. Make sure your firebaseConfig is correct.", e);
             alert("Could not initialize Firebase. Please check the console for details.");
@@ -415,6 +417,7 @@ def factorial(n):
         const auth = firebase.auth();
         const db = firebase.firestore(); 
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        // Use a stable, recent model. gemini-1.5-flash-latest is a great, fast alternative.
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
         
         let chat;
@@ -443,6 +446,8 @@ def factorial(n):
             const suggestionCards = document.querySelectorAll('.suggestion-card');
             const historyListContainer = document.getElementById('history-list-container');
             const sidebarFooterAuth = document.getElementById('sidebar-footer-auth');
+            const sidebarFooterGuest = document.getElementById('sidebar-footer-guest');
+            const loginSignupBtn = document.getElementById('login-signup-btn');
             const logoutBtn = document.getElementById('logout-btn');
             const authModalTitle = document.getElementById('auth-modal-title');
             const authViewSwitches = document.querySelectorAll('.auth-view-switch');
@@ -479,13 +484,23 @@ def factorial(n):
                 if (window.innerWidth < 1024) closeSidebar();
             };
 
+            // Auth Guard: All major interactions require a user to be logged in.
+            function handleAuthGuardedAction(callback) {
+                if (!auth.currentUser) {
+                    openModal(authModal);
+                    return;
+                }
+                callback();
+            }
+
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => { 
                     e.preventDefault(); 
-                    if (!auth.currentUser) return openModal(authModal); // Guard clause
-                    const screenId = link.getAttribute('data-screen');
-                    if (screenId === 'chat-screen' && !document.getElementById('chat-screen').classList.contains('active')) startNewChat();
-                    else if (screenId) showScreen(screenId);
+                    handleAuthGuardedAction(() => {
+                        const screenId = link.getAttribute('data-screen');
+                        if (screenId === 'chat-screen' && !document.getElementById('chat-screen').classList.contains('active')) startNewChat();
+                        else if (screenId) showScreen(screenId);
+                    });
                 });
             });
 
@@ -524,37 +539,22 @@ def factorial(n):
             }
 
             function processMessageText(text) {
+                // Improved regex to handle nested code and bolding better.
+                const formattedText = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
-                let lastIndex = 0;
-                let resultHtml = '';
-                let match;
-
-                while ((match = codeBlockRegex.exec(text)) !== null) {
-                    if (match.index > lastIndex) {
-                        const plainText = text.substring(lastIndex, match.index).trim();
-                        if (plainText) resultHtml += `<p>${escapeHtml(plainText).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`;
-                    }
-
-                    const lang = escapeHtml(match[1] || 'plaintext');
-                    const codeContent = match[2].trim();
-                    const previewButton = lang.toLowerCase() === 'html' ? `<button class="code-box-btn preview-code-btn" title="Preview HTML"><span class="material-symbols-outlined">visibility</span>Preview</button>` : '';
-
-                    resultHtml += `<div class="code-box"><div class="code-box-header"><span class="lang-name">${lang}</span>${previewButton}<button class="code-box-btn download-code-btn" title="Download Code"><span class="material-symbols-outlined">download</span>Download</button><button class="code-box-btn copy-code-btn" title="Copy Code"><span class="material-symbols-outlined">content_copy</span>Copy</button></div><pre><code>${escapeHtml(codeContent)}</code></pre></div>`;
-                    lastIndex = codeBlockRegex.lastIndex;
-                }
-
-                if (lastIndex < text.length) {
-                    const remainingText = text.substring(lastIndex).trim();
-                    if (remainingText) resultHtml += `<p>${escapeHtml(remainingText).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`;
-                }
-                return resultHtml || `<p>${escapeHtml(text).replace(/\n/g, '<br>')}</p>`;
+                
+                return formattedText.replace(codeBlockRegex, (match, lang, codeContent) => {
+                    const language = escapeHtml(lang || 'plaintext');
+                    const previewButton = language.toLowerCase() === 'html' ? `<button class="code-box-btn preview-code-btn" title="Preview HTML"><span class="material-symbols-outlined">visibility</span>Preview</button>` : '';
+                    return `</div><div class="code-box"><div class="code-box-header"><span class="lang-name">${language}</span>${previewButton}<button class="code-box-btn download-code-btn" title="Download Code"><span class="material-symbols-outlined">download</span>Download</button><button class="code-box-btn copy-code-btn" title="Copy Code"><span class="material-symbols-outlined">content_copy</span>Copy</button></div><pre><code>${escapeHtml(codeContent.trim())}</code></pre></div><div class="message-body">`;
+                });
             }
 
             function addMessageToChat(role, text) {
                 removeTypingIndicator();
-                const messageBodyHtml = processMessageText(text);
+                const processedText = processMessageText(text);
                 const roleText = role === 'user' ? 'You' : 'Gemini';
-                const messageHtml = `<div class="chat-message ${role}-message"><div class="message-header"><div class="message-role">${roleText}</div></div><div class="message-body">${messageBodyHtml}</div></div>`;
+                const messageHtml = `<div class="chat-message ${role}-message"><div class="message-header"><div class="message-role">${roleText}</div></div><div class="message-body">${processedText}</div></div>`;
                 chatContentWrapper.insertAdjacentHTML('beforeend', messageHtml);
                 scrollToBottom();
             }
@@ -579,37 +579,37 @@ def factorial(n):
                 if (lastActiveElement) lastActiveElement.focus();
                 authErrorMessages.forEach(msg => msg.classList.remove('visible'));
             };
+
+            authModal.querySelector('.modal-close-btn')?.addEventListener('click', () => closeModal(authModal));
+            authModal.addEventListener('click', (e) => { if (e.target === authModal) closeModal(authModal); });
             
             // --- Authentication & UI Updates ---
             auth.onAuthStateChanged(user => {
                 if (user) {
                     // User is signed in.
                     sidebarFooterAuth.style.display = 'block';
+                    sidebarFooterGuest.style.display = 'none';
                     profileFullName.value = user.displayName || '';
                     profileEmail.value = user.email || '';
-                    
-                    // If the user was looking at the auth modal, close it and init the app.
-                    if (authModal.classList.contains('visible')) {
-                        closeModal(authModal);
-                    }
-                    startNewChat();
+                    closeModal(authModal);
+                    if (!chat) startNewChat(); // Start a chat if one doesn't exist
                     showScreen('home-screen');
                 } else {
                     // No user is signed in.
                     sidebarFooterAuth.style.display = 'none';
-                    if (document.querySelector('#profile-screen.active')) {
-                         showScreen('home-screen');
-                    }
+                    sidebarFooterGuest.style.display = 'block';
+                    if (document.querySelector('#profile-screen.active')) showScreen('home-screen');
                     chatContentWrapper.innerHTML = ''; // Clear chat
-                    // Always show the login popup if the user is not authenticated.
+                    chat = null;
+                    currentChatId = null;
+                    // Show home screen behind the modal for context.
+                    showScreen('home-screen');
                     openModal(authModal);
                 }
             });
 
-            logoutBtn.addEventListener('click', () => {
-                auth.signOut().catch(error => showAuthError(error.message, 'profile-error'));
-                // App state will be reset via onAuthStateChanged
-            });
+            loginSignupBtn.addEventListener('click', () => openModal(authModal));
+            logoutBtn.addEventListener('click', () => auth.signOut().catch(error => showAuthError(error.message, 'profile-error')));
             
             function showAuthError(message, viewId) {
                 const errorElement = document.getElementById(viewId);
@@ -621,11 +621,7 @@ def factorial(n):
             
             const switchAuthView = (targetViewId) => {
                 authViews.forEach(view => view.classList.toggle('active', view.id === targetViewId));
-                authModalTitle.textContent = {
-                    'login-view': 'Login',
-                    'signup-view': 'Create Account',
-                    'forgot-password-view': 'Reset Password'
-                }[targetViewId];
+                authModalTitle.textContent = { 'login-view': 'Login', 'signup-view': 'Create Account', 'forgot-password-view': 'Reset Password' }[targetViewId];
             };
 
             authViewSwitches.forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); switchAuthView(link.dataset.targetView); }));
@@ -637,7 +633,7 @@ def factorial(n):
                 document.getElementById(errorViewId).classList.remove('visible');
                 try {
                     await authFunction();
-                    // No need to call closeModal here, onAuthStateChanged will handle it.
+                    // onAuthStateChanged will handle closing the modal and UI updates.
                 } catch (error) { showAuthError(error.message, errorViewId); }
                 finally { btn.disabled = false; btn.textContent = originalText; }
             }
@@ -649,10 +645,10 @@ def factorial(n):
             document.querySelectorAll('.btn-google').forEach(btn => btn.addEventListener('click', async () => {
                 try {
                     await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-                    // onAuthStateChanged will handle the UI update
                 } catch (error) { showAuthError(error.message, 'login-error'); }
             }));
-            
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(document.querySelector('.modal-overlay.visible')); });
+
             // --- Chat & Form Logic ---
             messageInput.addEventListener('input', () => {
                 sendButton.classList.toggle('active', messageInput.value.trim().length > 0);
@@ -660,9 +656,7 @@ def factorial(n):
                 messageInput.style.height = `${messageInput.scrollHeight}px`;
             });
 
-            // --- LOCAL + FIREBASE HISTORY ---
-            const getLocalHistory = () => JSON.parse(localStorage.getItem('gemini-chat-history') || '{}');
-
+            // --- FIRESTORE-ONLY HISTORY ---
             async function saveChatHistory() {
                 if (!chat || !auth.currentUser) return;
                 const historyToSave = await chat.getHistory();
@@ -672,7 +666,7 @@ def factorial(n):
                 const title = firstUserMsg ? firstUserMsg.parts[0].text.substring(0, 40) + '...' : "Untitled Chat";
                 
                 if (!currentChatId) {
-                    currentChatId = db.collection('chats').doc().id;
+                    currentChatId = db.collection('users').doc(auth.currentUser.uid).collection('chats').doc().id;
                 }
 
                 const chatData = { title, history: historyToSave, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
@@ -775,26 +769,28 @@ def factorial(n):
             historyListContainer.addEventListener('click', (e) => {
                 e.preventDefault();
                 const item = e.target.closest('.history-item');
-                if (item) loadChat(item.dataset.chatId);
+                if (item) handleAuthGuardedAction(() => loadChat(item.dataset.chatId));
             });
 
-            chatForm.addEventListener('submit', (e) => { e.preventDefault(); if (messageInput.value.trim()) handlePrompt(messageInput.value.trim()); });
+            chatForm.addEventListener('submit', (e) => { e.preventDefault(); handleAuthGuardedAction(() => { if (messageInput.value.trim()) handlePrompt(messageInput.value.trim()) }); });
             suggestionCards.forEach(card => card.addEventListener('click', (e) => { 
                 e.preventDefault(); 
-                if (!auth.currentUser) return openModal(authModal);
-                startNewChat(); 
-                setTimeout(() => handlePrompt(card.dataset.prompt), 50); 
+                handleAuthGuardedAction(() => {
+                    startNewChat(); 
+                    setTimeout(() => handlePrompt(card.dataset.prompt), 50); 
+                });
             }));
             profileForm.addEventListener('submit', (e) => { 
                 e.preventDefault(); 
-                const user = auth.currentUser; 
-                if (user && profileFullName.value.trim() !== user.displayName) {
-                    user.updateProfile({ displayName: profileFullName.value.trim() })
-                        .then(() => alert('Profile updated!'))
-                        .catch(err => showAuthError(err.message, 'profile-error'));
-                }
+                handleAuthGuardedAction(() => {
+                    const user = auth.currentUser; 
+                    if (user && profileFullName.value.trim() !== user.displayName) {
+                        user.updateProfile({ displayName: profileFullName.value.trim() })
+                            .then(() => alert('Profile updated!'))
+                            .catch(err => showAuthError(err.message, 'profile-error'));
+                    }
+                });
             });
-
         });
     </script>
 </body>
