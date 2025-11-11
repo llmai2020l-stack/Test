@@ -419,7 +419,7 @@ def factorial(n):
         const db = firebase.firestore(); 
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         // Use a stable, recent model. gemini-1.5-flash-latest is a great, fast alternative.
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
         
         let chat;
         let currentChatId = null;
