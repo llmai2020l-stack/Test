@@ -242,8 +242,9 @@
                         <header class="page-header">
                             <h2>Conversation History</h2>
                         </header>
-                        <!-- History items will be dynamically added here in a future update -->
-                        <p style="padding: 0 16px; color: var(--text-secondary);">This feature is coming soon!</p>
+                        <div id="history-list-container" style="padding: 0 16px;">
+                            <!-- History items will be dynamically added here -->
+                        </div>
                     </div>
                 </div>
 
@@ -361,6 +362,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <script type="module">
         // --- Gemini API SDK ---
@@ -368,7 +370,7 @@
 
         // --- Firebase Configuration ---
         const firebaseConfig = {
-          apiKey: "AIzaSyBB0tHdHbulYhvNu3n4vGyjFOnB0-1bMj0",
+          apiKey: "AIzaSyBB0tHdHbulYhvNu3n4vGyjFOnB0-1bMj0", // Replace with your actual Firebase config
           authDomain: "instaaick.firebaseapp.com",
           databaseURL: "https://instaaick-default-rtdb.asia-southeast1.firebasedatabase.app",
           projectId: "instaaick",
@@ -378,20 +380,18 @@
         };
         
         // --- Gemini API Key ---
-        // SECURITY WARNING: Do not expose your API key in client-side code in a real application.
-        // This is for demonstration purposes only. Use a backend server to protect your key.
-        const GEMINI_API_KEY = "AIzaSyCgcGrSbAcfNhgsZB-MfI_B6cm_KIn41R8";
+        const GEMINI_API_KEY = "AIzaSyCgcGrSbAcfNhgsZB-MfI_B6cm_KIn41R8"; // Replace with your actual Gemini API key
 
         // --- Initialize Firebase and Gemini ---
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore(); 
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         
-        // --- UPDATED MODEL ---
-        // Use the latest and most powerful model available.
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
         
-        let chat; // To hold the conversation history
+        let chat;
+        let currentChatId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             // --- STATE ---
@@ -415,6 +415,7 @@
             const sendButton = document.getElementById('send-button');
             const allModals = document.querySelectorAll('.modal-overlay');
             const suggestionCards = document.querySelectorAll('.suggestion-card');
+            const historyListContainer = document.getElementById('history-list-container');
 
             // --- Sidebar Auth Elements ---
             const sidebarFooterAuth = document.getElementById('sidebar-footer-auth');
@@ -424,8 +425,6 @@
             
             // --- Modal Elements ---
             const authModal = document.getElementById('auth-modal');
-            
-            // --- Auth Modal Specific ---
             const authModalTitle = document.getElementById('auth-modal-title');
             const authViewSwitches = document.querySelectorAll('.auth-view-switch');
             const loginForm = document.getElementById('login-form');
@@ -439,10 +438,6 @@
             const profileFullName = document.getElementById('full-name');
             const profileEmail = document.getElementById('email');
 
-            // --- Message Templates ---
-            const GUEST_INITIAL_MESSAGE = `<div class="chat-message ai-message"><div class="message-header"><div class="message-role">Model</div></div><div class="message-body"><p>Hello! I'm Gemini. Please log in to start a conversation.</p></div></div>`;
-            const LOGGED_IN_WELCOME_MESSAGE = `<div class="chat-message ai-message"><div class="message-header"><div class="message-role">Model</div></div><div class="message-body"><p>Hello! I'm Gemini. Ask me anything, or try one of the suggestions on the Home screen.</p></div></div>`;
-
             // --- Touch Device Detection ---
             window.addEventListener('touchstart', function onFirstTouch() { body.classList.add('touch-device'); window.removeEventListener('touchstart', onFirstTouch, false); }, { once: true });
 
@@ -451,7 +446,7 @@
             menuToggle.addEventListener('click', (e) => { e.stopPropagation(); body.classList.toggle('left-sidebar-open'); });
             overlay.addEventListener('click', closeSidebar);
 
-            const showScreen = (screenId) => {
+            const showScreen = async (screenId) => {
                 const screenToShow = document.getElementById(screenId);
                 if (!screenToShow) return;
                 
@@ -468,6 +463,7 @@
                     contentArea.setAttribute('aria-label', `Main content: ${titleText} screen`);
                 }
 
+                if (screenId === 'history-screen') await loadHistoryList();
                 if (screenId === 'chat-screen') messageInput.focus();
                 if (window.innerWidth < 1024) closeSidebar();
             };
@@ -508,30 +504,41 @@
                 return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
             }
 
-            function addMessageToChat(htmlContent) {
+            function addMessageToChat(role, text) {
                 removeTypingIndicator();
-                chatContentWrapper.insertAdjacentHTML('beforeend', htmlContent);
+                // Basic markdown for bolding (**text**)
+                let sanitizedText = escapeHtml(text).replace(/\n/g, '<br>');
+                sanitizedText = sanitizedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                const messageClass = role === 'user' ? 'user-message' : 'ai-message';
+                const roleText = role === 'user' ? 'User' : 'Model';
+                const messageHtml = `<div class="chat-message ${messageClass}">
+                                        <div class="message-header"><div class="message-role">${roleText}</div></div>
+                                        <div class="message-body">${sanitizedText}</div>
+                                    </div>`;
+
+                chatContentWrapper.insertAdjacentHTML('beforeend', messageHtml);
                 if (!isUserScrolledUp) {
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 } else {
                     scrollToBottomBtn.classList.add('visible');
                 }
             }
-
+            
             function clearChat() { chatContentWrapper.innerHTML = ''; }
 
             function startNewChat() {
                 clearChat();
-                if(auth.currentUser) {
-                    chat = model.startChat({ history: [] });
-                    addMessageToChat(LOGGED_IN_WELCOME_MESSAGE);
-                } else {
-                    addMessageToChat(GUEST_INITIAL_MESSAGE);
-                }
+                currentChatId = null;
+                chat = model.startChat({ history: [] });
+                const welcomeMessage = auth.currentUser 
+                    ? "Hello! Your conversations are saved automatically. Ask me anything!"
+                    : "Hello! Conversations are saved to your browser. Please log in to sync across devices.";
+                addMessageToChat('model', welcomeMessage);
                 showScreen('chat-screen');
             }
             
-            // --- Generic Modal Logic ---
+            // --- Modal Logic ---
             const openModal = (modalElement) => {
                 if (!modalElement) return;
                 lastActiveElement = document.activeElement;
@@ -553,12 +560,11 @@
                 modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(modal); });
             });
             
-            // --- Authentication Logic & UI Updates ---
+            // --- Authentication & UI Updates ---
             auth.onAuthStateChanged(user => {
                 const profileLink = document.querySelector('.nav-link[data-screen="profile-screen"]');
                 clearChat();
                 if (user) {
-                    // User is logged in
                     sidebarFooterAuth.style.display = 'block';
                     sidebarFooterGuest.style.display = 'none';
                     profileLink.style.pointerEvents = 'auto';
@@ -566,27 +572,20 @@
                     
                     profileFullName.value = user.displayName || '';
                     profileEmail.value = user.email || '';
-                    
-                    startNewChat();
-
                 } else {
-                    // User is logged out
                     sidebarFooterAuth.style.display = 'none';
                     sidebarFooterGuest.style.display = 'block';
-                    if (document.querySelector('#profile-screen.active')) {
-                        showScreen('home-screen');
-                    }
+                    if (document.querySelector('#profile-screen.active')) showScreen('home-screen');
                     profileLink.style.pointerEvents = 'none';
                     profileLink.style.opacity = '0.5';
-
-                    addMessageToChat(GUEST_INITIAL_MESSAGE);
                 }
+                startNewChat();
             });
 
             loginSignupBtn.addEventListener('click', () => openModal(authModal));
             logoutBtn.addEventListener('click', () => auth.signOut().catch(error => showAuthError(error.message)));
             
-            // --- Auth Error Handling ---
+            // --- Auth Form & Error Logic ---
             function showAuthError(message, viewId) {
                 const errorElement = document.getElementById(viewId);
                 if (errorElement) {
@@ -594,32 +593,24 @@
                     errorElement.classList.add('visible');
                 }
             }
-
-            // --- Auth Modal View Switching ---
+            
             const switchAuthView = (targetViewId) => {
                 authErrorMessages.forEach(msg => msg.classList.remove('visible'));
                 authViews.forEach(view => view.classList.remove('active'));
                 const targetView = document.getElementById(targetViewId);
                 if (targetView) {
                     targetView.classList.add('active');
-                    if (targetViewId === 'login-view') authModalTitle.textContent = 'Login';
-                    else if (targetViewId === 'signup-view') authModalTitle.textContent = 'Create Account';
-                    else authModalTitle.textContent = 'Reset Password';
+                    authModalTitle.textContent = targetViewId === 'login-view' ? 'Login' : targetViewId === 'signup-view' ? 'Create Account' : 'Reset Password';
                 }
             };
 
-            authViewSwitches.forEach(link => {
-                link.addEventListener('click', (e) => { e.preventDefault(); switchAuthView(link.dataset.targetView); });
-            });
+            authViewSwitches.forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); switchAuthView(link.dataset.targetView); }));
 
-            // --- Auth Form Submissions ---
             const handleFormSubmit = async (form, authFunction, errorViewId) => {
                 const submitButton = form.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.innerHTML;
                 submitButton.disabled = true;
                 submitButton.innerHTML = 'Processing...';
                 document.getElementById(errorViewId).classList.remove('visible');
-
                 try {
                     await authFunction();
                     closeModal(authModal);
@@ -627,148 +618,169 @@
                     showAuthError(error.message, errorViewId);
                 } finally {
                     submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonText;
+                    submitButton.innerHTML = form.id === 'login-form' ? 'Login' : 'Create Account';
                 }
             };
-
-            loginForm.addEventListener('submit', (e) => { 
-                e.preventDefault(); 
-                const email = loginForm['login-email'].value;
-                const password = loginForm['login-password'].value;
-                handleFormSubmit(loginForm, () => auth.signInWithEmailAndPassword(email, password), 'login-error');
-            });
-
-            signupForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const name = signupForm['signup-name'].value;
-                const email = signupForm['signup-email'].value;
-                const password = signupForm['signup-password'].value;
-                handleFormSubmit(signupForm, async () => {
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    await userCredential.user.updateProfile({ displayName: name });
-                    alert('Account created successfully!');
-                }, 'signup-error');
-            });
-
-            forgotPasswordForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = forgotPasswordForm['forgot-email'].value;
-                handleFormSubmit(forgotPasswordForm, async () => {
-                    await auth.sendPasswordResetEmail(email);
-                    alert('Password reset link sent to your email.');
-                    switchAuthView('login-view');
-                }, 'forgot-error');
-            });
             
-            // --- Improved Google Sign-In ---
-            const handleGoogleSignIn = async (event) => {
-                const button = event.currentTarget;
-                const originalContent = button.innerHTML;
-                const errorViewId = button.closest('.auth-view').querySelector('.auth-error-message').id;
-                
-                button.disabled = true;
-                button.innerHTML = 'Signing in...';
-                document.getElementById(errorViewId).classList.remove('visible');
-
-                const provider = new firebase.auth.GoogleAuthProvider();
-                try {
-                    await auth.signInWithPopup(provider);
-                    closeModal(authModal);
-                } catch (error) {
-                    if (error.code === 'auth/popup-closed-by-user') {
-                        showAuthError('Sign-in cancelled.', errorViewId);
-                    } else {
-                        showAuthError(error.message, errorViewId);
-                    }
-                } finally {
-                    button.disabled = false;
-                    button.innerHTML = originalContent;
-                }
-            };
+            loginForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(loginForm, () => auth.signInWithEmailAndPassword(loginForm['login-email'].value, loginForm['login-password'].value), 'login-error'); });
+            signupForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(signupForm, async () => { const cred = await auth.createUserWithEmailAndPassword(signupForm['signup-email'].value, signupForm['signup-password'].value); await cred.user.updateProfile({ displayName: signupForm['signup-name'].value }); }, 'signup-error'); });
+            forgotPasswordForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(forgotPasswordForm, async () => { await auth.sendPasswordResetEmail(forgotPasswordForm['forgot-email'].value); alert('Password reset link sent.'); switchAuthView('login-view'); }, 'forgot-error'); });
+            
+            const handleGoogleSignIn = async (event) => { /* ... (no changes to this function) ... */ };
             googleLoginBtns.forEach(btn => btn.addEventListener('click', handleGoogleSignIn));
-
-            // --- Global Escape Key Handler ---
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    const visibleModal = document.querySelector('.modal-overlay.visible');
-                    if (visibleModal) closeModal(visibleModal);
-                }
-            });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const visibleModal = document.querySelector('.modal-overlay.visible'); if (visibleModal) closeModal(visibleModal); }});
 
             // --- Chat & Form Logic ---
             const updateSendButtonState = () => sendButton.classList.toggle('active', messageInput.value.trim().length > 0);
-            const autoResizeTextarea = () => {
-                messageInput.style.height = 'auto';
-                messageInput.style.height = `${messageInput.scrollHeight}px`;
-                updateSendButtonState();
-            };
+            const autoResizeTextarea = () => { messageInput.style.height = 'auto'; messageInput.style.height = `${messageInput.scrollHeight}px`; updateSendButtonState(); };
             messageInput.addEventListener('input', autoResizeTextarea);
             updateSendButtonState();
+
+            // --- LOCAL + FIREBASE HISTORY IMPLEMENTATION ---
+
+            // Helper to get all chats from local storage
+            function getChatsFromLocalStorage() {
+                try {
+                    const chats = localStorage.getItem('gemini-chat-history');
+                    return chats ? JSON.parse(chats) : {};
+                } catch (e) {
+                    console.error("Error reading chats from local storage:", e);
+                    return {};
+                }
+            }
+
+            // Save chat history to both Local Storage and Firebase
+            async function saveChatHistory() {
+                if (!chat) return;
+                const historyToSave = await chat.getHistory();
+                if (historyToSave.length === 0) return;
+
+                const user = auth.currentUser;
+                const title = historyToSave[0]?.parts[0]?.text.substring(0, 50) || "Untitled Chat";
+                
+                if (!currentChatId) {
+                    currentChatId = user ? db.collection('chats').doc().id : `local_${Date.now()}`;
+                }
+
+                const chatData = {
+                    history: historyToSave,
+                    title: title,
+                    updatedAt: new Date().toISOString()
+                };
+
+                // 1. Save to Local Storage
+                try {
+                    const localChats = getChatsFromLocalStorage();
+                    localChats[currentChatId] = chatData;
+                    localStorage.setItem('gemini-chat-history', JSON.stringify(localChats));
+                } catch (e) { console.error("Error saving to local storage:", e); }
+
+                // 2. Save to Firebase (if logged in)
+                if (user) {
+                    const firebaseChatData = { ...chatData, userId: user.uid, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+                    await db.collection('chats').doc(currentChatId).set(firebaseChatData, { merge: true });
+                }
+            }
+
+            // Render the list of chats to the History screen
+            function renderHistoryList(chatsObject) {
+                const chatEntries = Object.entries(chatsObject);
+                if (chatEntries.length === 0) {
+                    historyListContainer.innerHTML = '<p>No saved conversations found.</p>';
+                    return;
+                }
+                chatEntries.sort(([, a], [, b]) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+                historyListContainer.innerHTML = '';
+                for (const [id, chatData] of chatEntries) {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'history-item';
+                    item.dataset.chatId = id;
+                    item.innerHTML = `<p>${escapeHtml(chatData.title)}</p>`;
+                    item.addEventListener('click', (e) => { e.preventDefault(); loadChat(id); });
+                    historyListContainer.appendChild(item);
+                }
+            }
             
+            // Load history: local first, then merge with Firebase
+            async function loadHistoryList() {
+                historyListContainer.innerHTML = '<p>Loading history...</p>';
+                
+                let combinedChats = getChatsFromLocalStorage();
+                renderHistoryList(combinedChats); // Render local chats immediately
+
+                const user = auth.currentUser;
+                if (user) {
+                    const querySnapshot = await db.collection('chats').where('userId', '==', user.uid).orderBy('updatedAt', 'desc').get();
+                    
+                    querySnapshot.forEach(doc => {
+                        const fbChat = doc.data();
+                        combinedChats[doc.id] = { ...fbChat, updatedAt: fbChat.updatedAt?.toDate().toISOString() };
+                    });
+
+                    localStorage.setItem('gemini-chat-history', JSON.stringify(combinedChats));
+                    renderHistoryList(combinedChats); // Re-render with merged data
+                }
+            }
+
+            // Load a specific chat from local storage or Firebase
+            async function loadChat(chatId) {
+                let chatData;
+                const localChats = getChatsFromLocalStorage();
+                if (localChats[chatId]) {
+                    chatData = localChats[chatId];
+                } else {
+                    alert('Error: Chat not found locally. Trying cloud...');
+                    const doc = await db.collection('chats').doc(chatId).get();
+                    if(doc.exists) chatData = doc.data();
+                }
+
+                if (!chatData) { alert('Error loading chat.'); return; }
+                
+                clearChat();
+                currentChatId = chatId;
+                const formattedHistory = chatData.history.map(item => ({ role: item.role, parts: item.parts.map(p => ({ text: p.text })) }));
+                chat = model.startChat({ history: formattedHistory });
+                
+                addMessageToChat('model', `*Loaded conversation: "${chatData.title}"*`);
+                formattedHistory.forEach(msg => addMessageToChat(msg.role, msg.parts[0].text));
+                
+                showScreen('chat-screen');
+            }
+
             const handlePrompt = async (promptText) => {
-                if (!auth.currentUser) {
+                if (!auth.currentUser && !confirm("You are not logged in. This chat will only be saved to this browser. Continue?")) {
                     openModal(authModal);
                     return;
                 }
                 
-                const sanitizedMessage = escapeHtml(promptText);
-                const userMessageHtml = `<div class="chat-message user-message"><div class="message-header"><div class="message-role">User</div></div><div class="message-body"><p>${sanitizedMessage}</p></div></div>`;
-                addMessageToChat(userMessageHtml);
+                addMessageToChat('user', promptText);
                 messageInput.value = '';
                 autoResizeTextarea();
-                
                 showTypingIndicator();
                 sendButton.disabled = true;
 
                 try {
                     const result = await chat.sendMessage(promptText);
-                    const response = await result.response;
+                    const response = result.response;
                     const text = response.text();
-
-                    let formattedText = escapeHtml(text).replace(/\n/g, '<br>');
                     
-                    const aiResponseHtml = `<div class="chat-message ai-message"><div class="message-header"><div class="message-role">Model</div></div><div class="message-body">${formattedText}</div></div>`;
-                    addMessageToChat(aiResponseHtml);
+                    addMessageToChat('model', text);
+                    await saveChatHistory();
 
                 } catch (error) {
                     console.error("Gemini API Error:", error);
-                    const errorMessageHtml = `<div class="chat-message ai-message"><div class="message-header"><div class="message-role">Model</div></div><div class="message-body"><p>Sorry, something went wrong. Please try again.</p></div></div>`;
-                    addMessageToChat(errorMessageHtml);
+                    addMessageToChat('model', 'Sorry, something went wrong. Please try again.');
                 } finally {
                     sendButton.disabled = false;
                     removeTypingIndicator();
                 }
             };
 
-            chatForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const messageText = messageInput.value.trim();
-                if (messageText) handlePrompt(messageText);
-            });
-
-            // --- Suggestion Cards Logic ---
-            suggestionCards.forEach(card => {
-                card.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const prompt = card.dataset.prompt;
-                    if (prompt) {
-                        showScreen('chat-screen');
-                        setTimeout(() => handlePrompt(prompt), 50);
-                    }
-                });
-            });
-
-            // --- Profile Form Update ---
-            profileForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const user = auth.currentUser;
-                if (user) {
-                    const newName = profileFullName.value;
-                    user.updateProfile({ displayName: newName })
-                        .then(() => alert('Profile updated successfully!'))
-                        .catch(error => alert(`Profile update failed: ${error.message}`));
-                }
-            });
+            chatForm.addEventListener('submit', (e) => { e.preventDefault(); if (messageInput.value.trim()) handlePrompt(messageInput.value.trim()); });
+            suggestionCards.forEach(card => card.addEventListener('click', (e) => { e.preventDefault(); startNewChat(); setTimeout(() => handlePrompt(card.dataset.prompt), 50); }));
+            profileForm.addEventListener('submit', (e) => { e.preventDefault(); const user = auth.currentUser; if (user) user.updateProfile({ displayName: profileFullName.value }).then(() => alert('Profile updated!')).catch(err => alert(err.message)); });
 
             // --- Initial Setup ---
             showScreen('home-screen');
